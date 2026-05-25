@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.env
+*.db
+*.db-journal
+
+# Backups
+backups/
+
+# Exports
+exports/
+
+# SSL certificates
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+docs/superpowers/

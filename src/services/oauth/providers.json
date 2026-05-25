@@ -1,0 +1,189 @@
+{
+  "version": "1.0.0",
+  "providers": {
+    "Google": {
+      "provider": "Google",
+      "aliases": ["google", "gmail"],
+      "endpoints": {
+        "authorization": {
+          "url": "https://accounts.google.com/o/oauth2/v2/auth",
+          "method": "GET"
+        },
+        "token": {
+          "url": "https://oauth2.googleapis.com/token",
+          "method": "POST"
+        }
+      },
+      "defaultScope": [
+        "email",
+        "profile",
+        "https://mail.google.com/"
+      ],
+      "contentType": "application/x-www-form-urlencoded",
+      "requiredParams": ["client_id"],
+      "optionalParams": ["state", "nonce", "code_challenge"],
+      "customHeaders": {}
+    },
+    "Microsoft": {
+      "provider": "Microsoft",
+      "aliases": ["microsoft", "outlook", "hotmail", "live"],
+      "endpoints": {
+        "authorization": {
+          "url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+          "method": "GET"
+        },
+        "token": {
+          "url": "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+          "method": "POST"
+        }
+      },
+      "defaultScope": [
+        "email",
+        "profile",
+        "offline_access",
+        "https://outlook.office.com/IMAP.AccessAsUser.All",
+        "https://outlook.office.com/SMTP.Send"
+      ],
+      "contentType": "application/x-www-form-urlencoded",
+      "requiredParams": ["client_id"],
+      "optionalParams": ["state", "nonce"],
+      "customHeaders": {}
+    },
+    "Yahoo": {
+      "provider": "Yahoo",
+      "aliases": ["yahoo"],
+      "endpoints": {
+        "authorization": {
+          "url": "https://api.login.yahoo.com/oauth2/request_auth",
+          "method": "GET"
+        },
+        "token": {
+          "url": "https://api.login.yahoo.com/oauth2/get_token",
+          "method": "POST"
+        }
+      },
+      "defaultScope": [
+        "openid",
+        "email",
+        "profile",
+        "mail-r",
+        "mail-w"
+      ],
+      "contentType": "application/x-www-form-urlencoded",
+      "requiredParams": ["client_id", "redirect_uri"],
+      "optionalParams": ["state", "nonce"],
+      "customHeaders": {}
+    },
+    "MailRu": {
+      "provider": "MailRu",
+      "aliases": ["mailru", "mail.ru", "yandex"],
+      "endpoints": {
+        "authorization": {
+          "url": "https://oauth.mail.ru/login",
+          "method": "GET"
+        },
+        "token": {
+          "url": "https://oauth.mail.ru/token",
+          "method": "POST"
+        }
+      },
+      "defaultScope": [
+        "userinfo",
+        "email"
+      ],
+      "contentType": "application/json",
+      "requiredParams": ["client_id"],
+      "optionalParams": ["state"],
+      "customHeaders": {}
+    },
+    "Apple": {
+      "provider": "Apple",
+      "aliases": ["apple", "icloud"],
+      "endpoints": {
+        "authorization": {
+          "url": "https://appleid.apple.com/auth/authorize",
+          "method": "GET"
+        },
+        "token": {
+          "url": "https://appleid.apple.com/auth/token",
+          "method": "POST"
+        }
+      },
+      "defaultScope": [
+        "name",
+        "email"
+      ],
+      "contentType": "application/x-www-form-urlencoded",
+      "requiredParams": ["client_id", "redirect_uri"],
+      "optionalParams": ["state", "nonce"],
+      "customHeaders": {}
+    },
+    "ProtonMail": {
+      "provider": "ProtonMail",
+      "aliases": ["protonmail", "proton"],
+      "endpoints": {
+        "authorization": {
+          "url": "https://account.proton.me/authorize",
+          "method": "GET"
+        },
+        "token": {
+          "url": "https://account.proton.me/api/auth/v4/sessions",
+          "method": "POST"
+        }
+      },
+      "defaultScope": [
+        "mail",
+        "user"
+      ],
+      "contentType": "application/json",
+      "requiredParams": ["client_id"],
+      "optionalParams": [],
+      "customHeaders": {}
+    },
+    "Zoho": {
+      "provider": "Zoho",
+      "aliases": ["zoho"],
+      "endpoints": {
+        "authorization": {
+          "url": "https://accounts.zoho.com/oauth/v2/auth",
+          "method": "GET"
+        },
+        "token": {
+          "url": "https://accounts.zoho.com/oauth/v2/token",
+          "method": "POST"
+        }
+      },
+      "defaultScope": [
+        "ZohoMail.messages.READ",
+        "ZohoMail.messages.CREATE"
+      ],
+      "contentType": "application/x-www-form-urlencoded",
+      "requiredParams": ["client_id", "redirect_uri"],
+      "optionalParams": ["state"],
+      "customHeaders": {}
+    },
+    "AOL": {
+      "provider": "AOL",
+      "aliases": ["aol"],
+      "endpoints": {
+        "authorization": {
+          "url": "https://api.login.aol.com/oauth2/request_auth",
+          "method": "GET"
+        },
+        "token": {
+          "url": "https://api.login.aol.com/oauth2/get_token",
+          "method": "POST"
+        }
+      },
+      "defaultScope": [
+        "openid",
+        "email",
+        "profile"
+      ],
+      "contentType": "application/x-www-form-urlencoded",
+      "requiredParams": ["client_id", "redirect_uri"],
+      "optionalParams": ["state", "nonce"],
+      "customHeaders": {}
+    }
+  }
+}

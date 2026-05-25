@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+*.db
+*.db-journal
+.git
+.claude
+.remember
+backups
+nginx/ssl/*.pem
+nginx/ssl/*.key

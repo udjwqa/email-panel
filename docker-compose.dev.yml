@@ -1,0 +1,18 @@
+services:
+  app:
+    build:
+      context: .
+      target: builder
+    command: npx tsx watch src/index.ts
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://panel:${DB_PASSWORD}@postgres:5432/email_panel
+      REDIS_URL: redis://redis:6379
+
+  nginx:
+    profiles:
+      - disabled

@@ -1,0 +1,445 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────
+// Enums
+// ──────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+enum TaskStatus {
+  CREATED
+  QUEUED
+  PROCESSING
+  PAUSED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum EmailStatus {
+  VALID_FORMAT
+  INVALID_FORMAT
+  DOMAIN_EXISTS
+  DOMAIN_NOT_FOUND
+  MX_FOUND
+  MX_NOT_FOUND
+  DUPLICATE
+  PROCESSED
+  ERROR
+}
+
+enum LogLevel {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+// ──────────────────────────────────────
+// 1. Users
+// ──────────────────────────────────────
+
+model User {
+  id           Int      @id @default(autoincrement())
+  telegramId   BigInt   @unique @map("telegram_id")
+  username     String?
+  isAdmin      Boolean  @default(false) @map("is_admin")
+  email        String?  @unique
+  passwordHash String?  @map("password_hash")
+  role         Role     @default(VIEWER)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  tasks               Task[]
+  logs                Log[]
+  exports             Export[]
+  authResults         AuthResult[]
+  telegramSessions    TelegramSession[]
+  notificationSetting NotificationSetting?
+  dictionaries        PasswordDictionary[]
+  credentialMatches      CredentialMatch[]
+  recoveredCredentials   RecoveredCredential[]
+
+  @@map("users")
+}
+
+// ──────────────────────────────────────
+// 2. Tasks
+// ──────────────────────────────────────
+
+model Task {
+  id            Int        @id @default(autoincrement())
+  userId        Int        @map("user_id")
+  fileName      String     @map("file_name")
+  status        TaskStatus @default(CREATED)
+  totalRows     Int        @default(0) @map("total_rows")
+  processedRows Int        @default(0) @map("processed_rows")
+  validCount    Int        @default(0) @map("valid_count")
+  invalidCount  Int        @default(0) @map("invalid_count")
+  duplicateCount Int       @default(0) @map("duplicate_count")
+  errorCount    Int        @default(0) @map("error_count")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  finishedAt    DateTime?  @map("finished_at")
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emails         Email[]
+  telegramTasks  TelegramTask[]
+
+  @@index([userId, status])
+  @@index([status])
+  @@map("tasks")
+}
+
+// ──────────────────────────────────────
+// 3. Emails
+// ──────────────────────────────────────
+
+model Email {
+  id          Int         @id @default(autoincrement())
+  taskId      Int         @map("task_id")
+  email       String
+  password    String?
+  domain      String
+  domainGroup String?     @map("domain_group")
+  status      EmailStatus @default(VALID_FORMAT)
+  source      String?
+  errorReason String?     @map("error_reason")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  processedAt DateTime?   @map("processed_at")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId, status])
+  @@index([domain])
+  @@index([email])
+  @@map("emails")
+}
+
+// ──────────────────────────────────────
+// 4. Domains
+// ──────────────────────────────────────
+
+model Domain {
+  id        Int      @id @default(autoincrement())
+  domain    String   @unique
+  group     String?
+  country   String?
+  mxStatus  Boolean? @map("mx_status")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([group])
+  @@map("domains")
+}
+
+// ──────────────────────────────────────
+// 5. Logs
+// ──────────────────────────────────────
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  type      String
+  level     LogLevel @default(INFO)
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([level, createdAt])
+  @@map("logs")
+}
+
+// ──────────────────────────────────────
+// 6. Exports
+// ──────────────────────────────────────
+
+model Export {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  filters   Json
+  filePath  String?  @map("file_path")
+  status    String   @default("pending")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("exports")
+}
+
+// ──────────────────────────────────────
+// 7. Settings
+// ──────────────────────────────────────
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ──────────────────────────────────────
+// 8. Proxies
+// ──────────────────────────────────────
+
+model Proxy {
+  id        Int      @id @default(autoincrement())
+  host      String
+  port      Int
+  protocol  String   @default("HTTP")
+  username  String?
+  password  String?
+  status    String   @default("unchecked")
+  latency   Int?
+  country   String?
+  lastCheck DateTime? @map("last_check")
+  failCount Int      @default(0) @map("fail_count")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([host, port])
+  @@index([status])
+  @@index([protocol, status])
+  @@map("proxies")
+}
+
+// ──────────────────────────────────────
+// IMAP Check Results
+// ──────────────────────────────────────
+
+model ImapCheckResult {
+  id           Int      @id @default(autoincrement())
+  email        String
+  password     String
+  host         String
+  port         Int
+  success      Boolean
+  errorType    String?  @map("error_type")
+  message      String?
+  checkedAt    DateTime @default(now()) @map("checked_at")
+  responseTime Int?     @map("response_time")
+
+  @@index([email])
+  @@index([checkedAt])
+  @@map("imap_check_results")
+}
+
+// ──────────────────────────────────────
+// Authentication Results Aggregation
+// ──────────────────────────────────────
+
+model AuthResult {
+  id                  Int      @id @default(autoincrement())
+  email               String
+  password            String
+  protocol            String
+  host                String
+  port                Int
+  status              String
+  errorMessage        String?  @map("error_message")
+  responseTime        Int?     @map("response_time")
+  checkedAt           DateTime @default(now()) @map("checked_at")
+  userId              Int?     @map("user_id")
+  accountStatus       String?  @map("account_status")
+  accountStatusReason String?  @map("account_status_reason")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([protocol])
+  @@index([status])
+  @@index([checkedAt])
+  @@index([userId])
+  @@index([accountStatus])
+  @@map("auth_results")
+}
+
+model InvalidCredential {
+  id                  Int      @id @default(autoincrement())
+  originalId          Int      @map("original_id")
+  email               String
+  password            String
+  protocol            String
+  host                String
+  port                Int
+  status              String
+  errorMessage        String?  @map("error_message")
+  responseTime        Int?     @map("response_time")
+  originalCheckedAt   DateTime @map("original_checked_at")
+  archivedAt          DateTime @default(now()) @map("archived_at")
+  archivedBy          Int?     @map("archived_by")
+  accountStatus       String?  @map("account_status")
+  accountStatusReason String?  @map("account_status_reason")
+
+  @@index([email])
+  @@index([status])
+  @@index([protocol])
+  @@index([archivedAt])
+  @@map("invalid_credentials")
+}
+
+// ──────────────────────────────────────
+// 12. Telegram Sessions
+// ──────────────────────────────────────
+
+model TelegramSession {
+  id           Int      @id @default(autoincrement())
+  chatId       BigInt   @unique @map("chat_id")
+  userId       Int      @map("user_id")
+  sessionData  Json     @default("{}") @map("session_data")
+  isActive     Boolean  @default(true) @map("is_active")
+  lastActivity DateTime @default(now()) @map("last_activity")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("telegram_sessions")
+}
+
+// ──────────────────────────────────────
+// 13. Telegram Tasks
+// ──────────────────────────────────────
+
+model TelegramTask {
+  id        Int      @id @default(autoincrement())
+  taskId    Int      @map("task_id")
+  chatId    BigInt   @map("chat_id")
+  messageId Int?     @map("message_id")
+  taskType  String   @map("task_type")
+  status    String   @default("pending")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, chatId])
+  @@index([chatId])
+  @@index([status])
+  @@map("telegram_tasks")
+}
+
+// ──────────────────────────────────────
+// 14. Notification Settings
+// ──────────────────────────────────────
+
+model NotificationSetting {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique @map("user_id")
+  taskComplete    Boolean  @default(true) @map("task_complete")
+  taskFailed      Boolean  @default(true) @map("task_failed")
+  errorThreshold  Boolean  @default(true) @map("error_threshold")
+  exportReady     Boolean  @default(true) @map("export_ready")
+  securityAlerts  Boolean  @default(true) @map("security_alerts")
+  quietHoursStart Int?     @map("quiet_hours_start")
+  quietHoursEnd   Int?     @map("quiet_hours_end")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_settings")
+}
+
+// ──────────────────────────────────────
+// 15. Password Dictionaries
+// ──────────────────────────────────────
+
+model PasswordDictionary {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  name       String
+  category   String   @default("common")
+  entryCount Int      @default(0) @map("entry_count")
+  source     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passwords DictionaryPassword[]
+
+  @@index([userId])
+  @@index([category])
+  @@map("password_dictionaries")
+}
+
+model DictionaryPassword {
+  id           Int     @id @default(autoincrement())
+  dictionaryId Int     @map("dictionary_id")
+  password     String
+  length       Int
+  hasDigits    Boolean @default(false) @map("has_digits")
+  hasSpecial   Boolean @default(false) @map("has_special")
+  hasUpper     Boolean @default(false) @map("has_upper")
+
+  dictionary PasswordDictionary @relation(fields: [dictionaryId], references: [id], onDelete: Cascade)
+
+  @@unique([dictionaryId, password])
+  @@index([password])
+  @@index([dictionaryId])
+  @@index([length])
+  @@map("dictionary_passwords")
+}
+
+// ──────────────────────────────────────
+// 17. Credential Matches
+// ──────────────────────────────────────
+
+model CredentialMatch {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  email     String
+  password  String?
+  status    String    @default("pending")
+  attempts  Int       @default(0)
+  foundAt   DateTime? @map("found_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, email])
+  @@index([userId, status])
+  @@index([email])
+  @@map("credential_matches")
+}
+
+// ──────────────────────────────────────
+// 18. Recovered Credentials
+// ──────────────────────────────────────
+
+model RecoveredCredential {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  email        String
+  password     String
+  method       String
+  accessLevel  String   @map("access_level")
+  confidence   Int      @default(100)
+  imapFolders  String?  @map("imap_folders")
+  hasInbox     Boolean  @default(false) @map("has_inbox")
+  messageCount Int?     @map("message_count")
+  has2fa       Boolean  @default(false) @map("has_2fa")
+  provider     String?
+  metadata     Json?
+  recoveredAt  DateTime @default(now()) @map("recovered_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, email])
+  @@index([userId, accessLevel])
+  @@index([email])
+  @@map("recovered_credentials")
+}
