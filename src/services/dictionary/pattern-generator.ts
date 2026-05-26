@@ -5,6 +5,7 @@ export interface PatternInput {
   nickname?: string;
   petName?: string;
   phone?: string;
+  city?: string;
   customWords?: string[];
 }
 
@@ -140,6 +141,25 @@ export function generatePasswordPatterns(
       add(`${leet}123`);
       add(`${leet}!`);
     }
+  }
+
+  // City-based patterns
+  if (input.city) {
+    const city = input.city.trim().toLowerCase();
+    const City = capitalize(input.city.trim());
+    add(city);
+    add(City);
+    add(`${city}123`);
+    add(`${City}!`);
+    if (bd) {
+      add(`${City}${bd.year}`);
+      add(`${city}${bd.year}`);
+      add(`${City}${bd.yy}`);
+      add(`${city}${bd.yy}`);
+    }
+    add(`${name}${city}`);
+    add(`${Name}${City}`);
+    add(`${city}${name}`);
   }
 
   // Custom words (nickname, pet, phone)
