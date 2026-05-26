@@ -70,6 +70,7 @@ model User {
   dictionaries        PasswordDictionary[]
   credentialMatches      CredentialMatch[]
   recoveredCredentials   RecoveredCredential[]
+  comboEntries           ComboEntry[]
 
   @@map("users")
 }
@@ -442,4 +443,25 @@ model RecoveredCredential {
   @@index([userId, accessLevel])
   @@index([email])
   @@map("recovered_credentials")
+}
+
+// ──────────────────────────────────────
+// 19. Combo Entries (credential stuffing)
+// ──────────────────────────────────────
+
+model ComboEntry {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  email     String
+  password  String
+  source    String?
+  status    String    @default("pending")
+  checkedAt DateTime? @map("checked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([email])
+  @@map("combo_entries")
 }

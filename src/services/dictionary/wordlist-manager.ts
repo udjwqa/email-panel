@@ -56,6 +56,58 @@ export const AVAILABLE_WORDLISTS: WordlistInfo[] = [
     description: "RockYou top 75% (~59K curated)",
     estimatedSize: "467 KB",
   },
+  // Probable-Wordlists (sorted by real frequency)
+  {
+    name: "probable-top-1575",
+    filename: "probable-top-1575.txt",
+    url: "https://raw.githubusercontent.com/berzerk0/Probable-Wordlists/master/Real-Passwords/Top1575-probable-v2.txt",
+    description: "Probable Wordlists — top 1,575 (by frequency)",
+    estimatedSize: "12 KB",
+  },
+  {
+    name: "probable-top-12k",
+    filename: "probable-top-12k.txt",
+    url: "https://raw.githubusercontent.com/berzerk0/Probable-Wordlists/master/Real-Passwords/Top12Thousand-probable-v2.txt",
+    description: "Probable Wordlists — top 12,645 (by frequency)",
+    estimatedSize: "100 KB",
+  },
+  {
+    name: "probable-top-304k",
+    filename: "probable-top-304k.txt",
+    url: "https://raw.githubusercontent.com/berzerk0/Probable-Wordlists/master/Real-Passwords/Top304Thousand-probable-v2.txt",
+    description: "Probable Wordlists — top 304K (by frequency)",
+    estimatedSize: "2.8 MB",
+  },
+  // Specialized
+  {
+    name: "most-used-1M",
+    filename: "most-used-passwords.txt",
+    url: "https://raw.githubusercontent.com/kkrypt0nn/wordlists/main/wordlists/passwords/most_used_passwords.txt",
+    description: "Most used passwords — 1M entries",
+    estimatedSize: "8.5 MB",
+  },
+  {
+    name: "bt4-passwords",
+    filename: "bt4-passwords.txt",
+    url: "https://raw.githubusercontent.com/kkrypt0nn/wordlists/main/wordlists/passwords/bt4_passwords.txt",
+    description: "BT4 password collection — 1.65M entries",
+    estimatedSize: "16 MB",
+  },
+  {
+    name: "default-credentials",
+    filename: "default-credentials.csv",
+    url: "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Default-Credentials/default-passwords.csv",
+    description: "Default vendor/router passwords — 2.8K",
+    estimatedSize: "50 KB",
+  },
+  // CrackStation (local only — downloaded separately)
+  {
+    name: "crackstation-human",
+    filename: "crackstation-human-only.txt",
+    url: "",
+    description: "CrackStation Human-Only — 63.9M real passwords (684 MB)",
+    estimatedSize: "684 MB",
+  },
 ];
 
 async function ensureDir(): Promise<void> {

@@ -1,6 +1,14 @@
 import { InlineKeyboard } from "grammy";
 import { BotContext } from "../types.js";
 import { mainMenuKeyboard } from "../keyboards/main-menu.js";
+import {
+  validationMenu,
+  securityMenu,
+  recoveryMenu,
+  analyticsMenu,
+  adminMenu,
+  importExportMenu,
+} from "../keyboards/sections.js";
 import { showTaskList } from "./tasks.js";
 import { handleGeneratorCallback } from "./generator.js";
 import { showStats } from "./stats.js";
@@ -10,6 +18,38 @@ import { showSettingsMain } from "./settings.js";
 import { showLogs } from "./logs.js";
 import { db } from "../../services/db.js";
 import { getDomainGroup } from "../../services/domain-groups.js";
+
+export async function handleSectionCallback(ctx: BotContext) {
+  const data = ctx.callbackQuery?.data;
+  if (!data?.startsWith("section:")) return;
+
+  const section = data.replace("section:", "");
+  await ctx.answerCallbackQuery();
+
+  const SECTION_TEXTS: Record<string, string> = {
+    validation: "📂 <b>Загрузка и Проверка</b>\n\nUpload email-баз, SMTP/IMAP проверка, управление задачами:",
+    security: "🔒 <b>Security Audit</b>\n\nOAuth проверка, полный audit pipeline, экспорт результатов:",
+    recovery: "🔑 <b>Recovery</b>\n\nСловари, паттерны, dictionary attack, credential stuffing:",
+    analytics: "📊 <b>Аналитика</b>\n\nСтатистика, dashboard, audit report:",
+    admin: "⚙️ <b>Настройки</b>\n\nСистема, прокси, логи, уведомления:",
+    import_export: "📥 <b>Import / Export</b>\n\nCombo-листы, экспорт данных, генератор email:",
+  };
+
+  const SECTION_KBS: Record<string, () => InlineKeyboard> = {
+    validation: validationMenu,
+    security: securityMenu,
+    recovery: recoveryMenu,
+    analytics: analyticsMenu,
+    admin: adminMenu,
+    import_export: importExportMenu,
+  };
+
+  const text = SECTION_TEXTS[section] ?? "Выберите действие:";
+  const kbFn = SECTION_KBS[section];
+  const kb = kbFn ? kbFn() : new InlineKeyboard().text("◀ Назад", "menu:back");
+
+  await ctx.editMessageText(text, { parse_mode: "HTML", reply_markup: kb });
+}
 
 export async function handleMenuCallback(ctx: BotContext) {
   const data = ctx.callbackQuery?.data;
@@ -54,6 +94,29 @@ export async function handleMenuCallback(ctx: BotContext) {
     case "logs": {
       return showLogs(ctx, "errors");
     }
+    case "dashboard": {
+      const { showDashboard } = await import("./dashboard.js");
+      return showDashboard(ctx);
+    }
+    case "audit_report": {
+      await ctx.answerCallbackQuery();
+      const { generateAuditReport } = await import("../../services/audit-report/generator.js");
+      const { formatAuditReportText } = await import("../../services/audit-report/formatter.js");
+      const report = await generateAuditReport({});
+      const text = formatAuditReportText(report);
+      await ctx.editMessageText(text.slice(0, 4000), {
+        reply_markup: new InlineKeyboard().text("◀ Аналитика", "section:analytics"),
+      });
+      return;
+    }
+    case "notifications": {
+      const { showNotificationSettings } = await import("./notifications.js");
+      return showNotificationSettings(ctx);
+    }
+    case "help": {
+      const { showHelp } = await import("./help.js");
+      return showHelp(ctx, "main");
+    }
     case "check_smtp": {
       return showMenuTaskList(ctx, "smtp");
     }
@@ -94,6 +157,16 @@ export async function handleMenuCallback(ctx: BotContext) {
       await ctx.answerCallbackQuery();
       const { recoverPasswordsCommand } = await import("../handlers/recover-passwords.js");
       return recoverPasswordsCommand(ctx as any);
+    }
+    case "stuffing": {
+      await ctx.answerCallbackQuery();
+      const { stuffingCommand } = await import("../handlers/stuffing.js");
+      return stuffingCommand(ctx as any);
+    }
+    case "import_combo": {
+      await ctx.answerCallbackQuery();
+      const { importComboCommand } = await import("../handlers/stuffing.js");
+      return importComboCommand(ctx as any);
     }
     case "back": {
       await ctx.answerCallbackQuery();

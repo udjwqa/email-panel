@@ -39,6 +39,10 @@ export async function handleRpwCallback(ctx: BotContext) {
       return showProgress(ctx);
     case "stop":
       return stopAttack(ctx);
+    case "mutations": {
+      (ctx.session as any).rpwMutations = !(ctx.session as any).rpwMutations;
+      return showConfirmation(ctx);
+    }
     case "results":
       return sendResults(ctx);
     case "back":
@@ -145,8 +149,13 @@ async function showConfirmation(ctx: BotContext) {
     });
   }
 
+  const mutations = (ctx.session as any).rpwMutations ?? false;
+  const mutExtra = mutations ? " (+~2000 мутаций)" : "";
+
   const kb = new InlineKeyboard()
     .text("▶ Запустить Dictionary Attack", "rpw:start")
+    .row()
+    .text(mutations ? "🧬 Мутации: ВКЛ" : "🧬 Мутации: ВЫКЛ", "rpw:mutations")
     .row()
     .text("« Изменить словари", "rpw:dict:menu");
 
@@ -155,8 +164,9 @@ async function showConfirmation(ctx: BotContext) {
     `🔑 <b>Подтверждение</b>\n\n` +
       `📧 Email'ов: ${emailCount}\n` +
       `📖 Словарей: ${dictIds.length}\n` +
-      `🔑 Паролей: ${totalPasswords}\n` +
-      `🔄 Комбинаций: ${emailCount * totalPasswords}\n\n` +
+      `🔑 Паролей: ${totalPasswords}${mutExtra}\n` +
+      `🔄 Комбинаций: ~${emailCount * totalPasswords}\n` +
+      `🧬 Мутации: ${mutations ? "✅ ВКЛ (leet, year, keyboard)" : "❌ ВЫКЛ"}\n\n` +
       `Нажмите для запуска:`,
     { parse_mode: "HTML", reply_markup: kb },
   );

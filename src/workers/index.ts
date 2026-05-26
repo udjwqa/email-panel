@@ -12,6 +12,7 @@ import { createImapValidateBatchWorker } from "./imap-validate-batch-worker.js";
 import { createPipelineWorker } from "./pipeline-worker.js";
 import { createMatchingWorker } from "./matching-worker.js";
 import { createRecoveryPipelineWorker } from "./recovery-pipeline-worker.js";
+import { createStuffingWorker } from "./stuffing-worker.js";
 import { log } from "../utils/logger.js";
 
 let emailWorker: Worker;
@@ -23,6 +24,7 @@ let imapValidateBatchWorker: Worker;
 let pipelineWorker: Worker;
 let matchingWorker: Worker;
 let recoveryPipelineWorker: Worker;
+let stuffingWorker: Worker;
 
 export async function startWorkers() {
   emailWorker = await createEmailWorker();
@@ -51,6 +53,9 @@ export async function startWorkers() {
 
   recoveryPipelineWorker = createRecoveryPipelineWorker();
   log("Recovery pipeline worker started");
+
+  stuffingWorker = createStuffingWorker(15);
+  log("Stuffing worker started (15 concurrent)");
 
   await scheduleInvalidCredsCleanup();
   log("Invalid credentials cleanup worker started");
@@ -92,6 +97,10 @@ export async function stopWorkers() {
   if (recoveryPipelineWorker) {
     await recoveryPipelineWorker.close();
     log("Recovery pipeline worker stopped");
+  }
+  if (stuffingWorker) {
+    await stuffingWorker.close();
+    log("Stuffing worker stopped");
   }
   await invalidCredsCleanupWorker.close();
   log("Invalid credentials cleanup worker stopped");

@@ -3,7 +3,7 @@ import { config } from "../config.js";
 import { BotContext, SessionData } from "./types.js";
 import { authMiddleware } from "./middleware/auth.js";
 import { startCommand } from "./commands/start.js";
-import { handleMenuCallback } from "./callbacks/menu.js";
+import { handleMenuCallback, handleSectionCallback } from "./callbacks/menu.js";
 import { handleUploadCallback } from "./callbacks/upload.js";
 import { handleTaskCallback, showTaskList } from "./callbacks/tasks.js";
 import {
@@ -42,6 +42,15 @@ import { handleRecoverCallback } from "./callbacks/recover.js";
 import { fullRecoverCommand } from "./handlers/full-recover.js";
 import { recoverPasswordsCommand } from "./handlers/recover-passwords.js";
 import { handleRpwCallback, handleRpwFileUpload } from "./callbacks/recover-passwords.js";
+import { stuffingCommand, importComboCommand } from "./handlers/stuffing.js";
+import { handleStuffingCallback, handleComboFileUpload } from "./callbacks/stuffing.js";
+import { handleDashboardCallback, showDashboard } from "./callbacks/dashboard.js";
+import { handleNotificationCallback } from "./callbacks/notifications.js";
+import { handleHelpCallback, showHelp } from "./callbacks/help.js";
+import { handleTieredCallback } from "./callbacks/tiered-recovery.js";
+import { handleWordlistCallback } from "./callbacks/wordlists.js";
+import { handleBreachCallback, handleBreachTextInput } from "./callbacks/breach-search.js";
+import { handleArchiveCallback } from "./callbacks/archive.js";
 import {
   handleRecoveryPipelineCallback,
   handleRecoveryPipelineTextInput,
@@ -127,8 +136,13 @@ export function createBot() {
   bot.command("recover", requireRole("ADMIN", "MANAGER"), recoverCommand);
   bot.command("full_recover", requireRole("ADMIN", "MANAGER"), fullRecoverCommand);
   bot.command("recover_passwords", requireRole("ADMIN", "MANAGER"), recoverPasswordsCommand);
+  bot.command("stuff", requireRole("ADMIN", "MANAGER"), stuffingCommand);
+  bot.command("import_combo", requireRole("ADMIN", "MANAGER"), importComboCommand);
+  bot.command("dashboard", (ctx) => showDashboard(ctx));
+  bot.command("help", (ctx) => showHelp(ctx, "main"));
 
   bot.on("message:document", async (ctx) => {
+    if (await handleComboFileUpload(ctx)) return;
     if (await handleRpwFileUpload(ctx)) return;
     if (await handleDictionaryFileUpload(ctx)) return;
     if (await handleProxyFileUpload(ctx)) return;
@@ -136,6 +150,7 @@ export function createBot() {
   });
 
   bot.on("message:text", async (ctx) => {
+    if (await handleBreachTextInput(ctx)) return;
     if (await handleRecoveryPipelineTextInput(ctx)) return;
     if (await handlePasswordWizardInput(ctx)) return;
     if (await handleDictionaryTextInput(ctx)) return;
@@ -145,6 +160,7 @@ export function createBot() {
 
   bot.on("callback_query:data", async (ctx) => {
     const data = ctx.callbackQuery.data;
+    if (data.startsWith("section:")) return handleSectionCallback(ctx);
     if (data.startsWith("menu:")) return handleMenuCallback(ctx);
     if (data.startsWith("upload:")) return handleUploadCallback(ctx);
     if (data.startsWith("task:")) return handleTaskCallback(ctx);
@@ -164,6 +180,14 @@ export function createBot() {
     if (data.startsWith("match:")) return handleRecoverCallback(ctx);
     if (data.startsWith("rpipe:")) return handleRecoveryPipelineCallback(ctx);
     if (data.startsWith("rpw:")) return handleRpwCallback(ctx);
+    if (data.startsWith("stuff:")) return handleStuffingCallback(ctx);
+    if (data.startsWith("dash:")) return handleDashboardCallback(ctx);
+    if (data.startsWith("notif:")) return handleNotificationCallback(ctx);
+    if (data.startsWith("help:")) return handleHelpCallback(ctx);
+    if (data.startsWith("tier:")) return handleTieredCallback(ctx);
+    if (data.startsWith("wl:")) return handleWordlistCallback(ctx);
+    if (data.startsWith("breach:")) return handleBreachCallback(ctx);
+    if (data.startsWith("arch:")) return handleArchiveCallback(ctx);
     await ctx.answerCallbackQuery("Неизвестная команда");
   });
 

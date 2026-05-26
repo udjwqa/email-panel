@@ -18,6 +18,10 @@ export const TEMPLATES: TemplateInfo[] = [
   },
   { id: "underscore", label: "name_surname", example: "max_mueller@domain" },
   { id: "concat", label: "namesurname", example: "maxmueller@domain" },
+  { id: "sur_name_year", label: "surname.name+YY", example: "mueller.max95@domain" },
+  { id: "name_ddmm", label: "name+DDMM", example: "max1505@domain" },
+  { id: "dash", label: "name-surname", example: "max-mueller@domain" },
+  { id: "sur_first", label: "surname+n", example: "muellerm@domain" },
 ];
 
 interface TemplateParams {
@@ -67,6 +71,18 @@ export function applyTemplate(
       break;
     case "concat":
       local = `${name}${surname}`;
+      break;
+    case "sur_name_year":
+      local = `${surname}.${name}${yy}`;
+      break;
+    case "name_ddmm":
+      local = `${name}${yy}`;
+      break;
+    case "dash":
+      local = `${name}-${surname}`;
+      break;
+    case "sur_first":
+      local = `${surname}${first}`;
       break;
     default:
       local = `${name}.${surname}`;

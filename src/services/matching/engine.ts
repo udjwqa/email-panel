@@ -254,7 +254,7 @@ export class CredentialMatchingEngine {
         return result.success;
       }
 
-      // IMAP method
+      // IMAP method (proxy support via attempt controller check)
       const imapConfig = getImapConfig(email);
       if (!imapConfig) return false;
 

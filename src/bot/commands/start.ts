@@ -13,13 +13,18 @@ export async function startCommand(ctx: BotContext) {
   const roleLabel = ROLE_LABELS[dbUser.role] ?? dbUser.role;
 
   await ctx.reply(
-    `Добро пожаловать, ${name}!\n` +
+    `👋 <b>Добро пожаловать, ${name}!</b>\n` +
       `Роль: ${roleLabel}\n\n` +
-      `📋 Загрузка и проверка баз email\n` +
-      `🔒 Security Audit (SMTP / Web / IMAP)\n` +
-      `📊 Экспорт и статистика\n\n` +
-      `Выберите действие:`,
+      `<b>Email Panel</b> — валидация, аудит и восстановление\n\n` +
+      `📂 <b>Загрузка</b> — upload и проверка email-баз\n` +
+      `🔒 <b>Security</b> — SMTP / OAuth / IMAP аудит\n` +
+      `🔑 <b>Recovery</b> — словари, паттерны, stuffing\n` +
+      `📊 <b>Аналитика</b> — stats, dashboard, отчёты\n` +
+      `⚙️ <b>Настройки</b> — система, прокси, логи\n` +
+      `📥 <b>Import</b> — combo-листы, экспорт\n\n` +
+      `Выберите раздел:`,
     {
+      parse_mode: "HTML",
       reply_markup: mainMenuKeyboard(dbUser.role, dbUser.isAdmin),
     },
   );
